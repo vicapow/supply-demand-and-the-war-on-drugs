@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <style>
+
+html, body{
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  font-family: helvetica;
+}
+
+sd-graph, sd-combined{
+/*  width: 100%;
+  height: 100%;*/
+  width: 300px;
+  height: 300px;
+  display: block;
+  overflow: hidden;
+  /*border: 10px solid red;*/
+  box-sizing: border-box;
+}
+
+path{
+  stroke: black;
+  stroke-width: 1;
+}
+
+sd-graph, sd-combined{
+  shape-rendering: crispEdges;
+}
+
+.quantity.label{
+  text-anchor: end;
+}
+
+.price.label{
+  text-anchor: end;
+}
+
+sd-graph path.curve{
+  stroke-width: 4;
+}
+
+path.curve.supply{
+  stroke-width: 4;
+  stroke: orange;
+}
+
+path.curve.demand{
+  stroke-width: 4;
+  stroke: blue;
+}
+
+sd-graph .nob{
+  fill: #ddd;
+  stroke: #333;
+  cursor: pointer;
+}
+
+sd-graph .axis path, sd-combined .axis path {
+  display: none;
+}
+
+sd-graph .axis line, sd-combined .axis line {
+  stroke: #ddd;
+  stroke-width: 1;
+}
+
+input[type="range"]{
+  width: 100%;
+}
+
+.column{
+  width: 400px;
+  float: left;
+  padding: 10px;
+}
+
+    </style>
+  </head>
+  <body ng-app="myApp" ng-controller="MainCtrl">
+    <div class="column">
+      <h1>Demand Curve</h1>
+      <sd-graph class="demand" quantity="demand.quantity" price="price">
+      </sd-graph>
+      <input type="range"
+        class="quantity"
+        min="{{sliderRange[0]}}"
+        max="{{sliderRange[1]}}"
+        ng-model="demand.quantity[1]"
+        step="{{(max - min) / 1000}}">
+      <br>
+      for each $1 decrease in the unit price of the drugs, drug users would be willing to consume {{demandSlope | number:2}} more units of drugs
+    </div>
+    <div class="column">
+      <h1>Supply Curve</h1>
+      <sd-graph class="supply" quantity="supply.quantity" price="price">
+      </sd-graph>
+      <input type="range" 
+        min="{{sliderRange[0]}}"
+        max="{{sliderRange[1]}}"
+        ng-model="supply.quantity[1]"
+        step="{{(max - min) / 1000}}">
+      <p>
+        for each $1 increase in the unit price of the drug, suppliers would be willing to supply {{supplySlope | number:2}} more units of drugs
+      </p>
+      <input type="range" 
+        min="{{supplyShift.range[0]}}"
+        max="{{supplyShift.range[1]}}"
+        ng-model="supplyShift.value"
+        step="{{(supplyShift.range[1] - supplyShift.range[0]) / 1000}}">
+      <p>
+        how much the supply of drugs is being restricted
+      </p>
+    </div>
+    <div class="column">
+      <h1>Demand & Supply</h1>
+      <sd-combined class="demand" 
+        quantity="quantity" 
+        price="price" 
+        supply-curve="supplyCurve" 
+        demand-curve="demandCurve"
+        supply-curve-shifted="supplyCurveShifted">
+      </sd-combined>
+    </div>
+    </div>
+    <script src="d3.js"></script>
+    <script src="angular.js"></script>
+    <script>
+
+'use strict'
+
+var app = angular.module('myApp', [])
+
+app.controller('MainCtrl', function($scope){
+  var sliderRange = $scope.sliderRange = [0, 1e3]
+  var middle = (sliderRange[1] - sliderRange[0]) / 2 + sliderRange[0]
+  var supply = $scope.supply = { quantity: [0, middle] }
+  var demand = $scope.demand = { quantity: [0, middle] }
+  var price = $scope.price = [0, 200]
+  var combined = $scope.combined = {}
+
+  var quantity = $scope.quantity = [0, 0]
+  
+  // start
+  $scope.$watch(function(){
+    return Math.min(supply.quantity[0], demand.quantity[0])
+  }, function(min){ quantity[0] = min })
+  
+  // stop
+  $scope.$watch(function(){
+    return Math.max(supply.quantity[1], demand.quantity[1])
+  }, function(max){ quantity[1] = max })
+
+  var supplyCurve = $scope.supplyCurve = [
+      { quantity: supply.quantity[0], price: $scope.price[0] }
+    , { quantity: supply.quantity[1], price: $scope.price[1] }
+  ]
+
+  $scope.$watch('supply.quantity', function(quantity){
+    var p1 = supplyCurve[0].quantity = quantity[0]
+    var p2 = supplyCurve[1].quantity = quantity[1]
+    $scope.supplySlope = (p2 - p1) / (price[1] - price[0])
+  }, true)
+
+  var supplyCurveShifted = $scope.supplyCurveShifted = [
+      { quantity: supply.quantity[0], price: $scope.price[0] }
+    , { quantity: supply.quantity[1], price: $scope.price[1] }
+  ]
+
+  var demandCurve = $scope.demandCurve = [
+      { quantity: demand.quantity[0], price: $scope.price[1] }
+    , { quantity: demand.quantity[1], price: $scope.price[0] }
+  ]
+  $scope.$watch('demand.quantity', function(quantity){
+    var p1 = demandCurve[0].quantity = quantity[0]
+    var p2 = demandCurve[1].quantity = quantity[1]
+    $scope.demandSlope = (p2 - p1) / (price[1] - price[0])
+  }, true)
+
+  $scope.supplyShift = { value: 50, range: [ 0, 100] }
+
+})
+
+
+app.directive('sdCombined', function(){
+  function link(scope, el, attr){
+    el = el[0]
+    var p = 25
+    var padding = { top: p, right: p, bottom: p + 15, left: p + 20 }
+    var width = el.clientWidth - padding.left - padding.right
+    var height = el.clientHeight - padding.top - padding.bottom
+    var svg = d3.select(el).append('svg')
+      .attr({width: el.clientWidth, height: el.clientHeight})
+    var pg = svg.append('g')
+      .attr('class', 'padding')
+      .attr('transform', 'translate(' + padding.left + ',' + padding.top + ')')
+    var x = d3.scale.linear().range([0, width])
+    var y = d3.scale.linear().range([height, 0])
+
+    var line = d3.svg.line()
+      .x(function(d){ return x(d.quantity) })
+      .y(function(d){ return y(d.price) })
+
+    var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(true)
+      .ticks(4).tickFormat(d3.format(',.2s'))
+    // add the x-axis
+    var xAxisG = pg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+
+    var yAxis = d3.svg.axis().scale(y).tickSize(-width).tickSubdivide(true)
+      .orient('left').ticks(4)
+    var yAxisG = pg.append("g")
+      .attr("class", "y axis")
+      .attr("transform", "translate(0,0)")
+      .call(yAxis)
+
+    var supply_curve = pg.append('path')
+      .datum(scope.supplyCurve)
+      .attr('d', line)
+      .attr('class', 'curve supply')
+
+    var supply_curve_shifted = pg.append('path')
+      .datum(scope.supplyCurveShifted)
+      .attr('d', line)
+      .attr('class', 'curve supply')
+
+    var demand_curve = pg.append('path')
+      .datum(scope.demandCurve)
+      .attr('d', line)
+      .attr('class', 'curve demand')
+
+    console.log('demand_curve', demand_curve)
+
+    var quantity_label = pg.append('text').text('quantity')
+      .attr('class', 'quantity label')
+      .attr('x', width)
+      .attr('y', height + 30)
+
+    var price_label = pg.append('text').text('price')
+      .attr('class', 'price label')
+      .attr('x', 0)
+      .attr('y', -33)
+      .attr('transform', 'rotate(-90)')
+
+    scope.$watch('demandCurve', update_curve.bind(null, demand_curve), true)
+    scope.$watch('supplyCurve', update_curve.bind(null, supply_curve), true)
+    scope.$watch('supplyCurveShifted', update_curve.bind(null, supply_curve_shifted), true)
+
+    function update_curve(path, data){ path.attr('d', line(data)) }
+    function update_curves(){
+      update_curve(supply_curve, scope.supplyCurve)
+      update_curve(demand_curve, scope.demandCurve)
+      update_curve(supply_curve_shifted, scope.supplyCurveShifted)
+    }
+
+    scope.$watch('quantity', function(quantity){
+      x.domain(quantity.slice().map(Number))
+      xAxisG.call(xAxis)
+      update_curves()
+    }, true)
+
+    // although the price 
+    scope.$watch('price', function(price){
+      y.domain(price.slice().map(Number))
+      yAxisG.call(yAxis)
+      update_curves()
+    }, true)
+
+  }
+  return {
+    link: link
+    , scope: { 
+        price: '='
+      , quantity: '='
+      , supplyCurve: '='
+      , demandCurve: '='
+      , supplyCurveShifted: '='
+    }
+    , restrict: 'E'
+  }
+})
+
+
+app.directive('sdGraph', function(){
+  function link(scope, el, attr){
+    el = el[0]
+    var p = 25
+    var is_supply = attr.class.indexOf('supply') !== -1
+    var padding = { top: p, right: p, bottom: p + 15, left: p + 20 }
+    var width = el.clientWidth - padding.left - padding.right
+    var height = el.clientHeight - padding.top - padding.bottom
+    var svg = d3.select(el).append('svg')
+      .attr({width: el.clientWidth, height: el.clientHeight})
+    var pg = svg.append('g').attr('class', 'padding')
+      .attr('transform', 'translate(' + padding.left + ',' + padding.top + ')')
+    var x = d3.scale.linear().range([0, width])
+    var y = d3.scale.linear().range([height, 0])
+    var line = d3.svg.line()
+      .x(function(d){ return x(d.x) })
+      .y(function(d){ return y(d.y) })
+
+    var xAxis = d3.svg.axis().scale(x).tickSize(-height)
+      .tickSubdivide(true).ticks(4).tickFormat(d3.format(',.2s'))
+    // add the x-axis
+    var xAxisG = pg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+
+    var yAxis = d3.svg.axis().scale(y).tickSize(-width).tickSubdivide(true)
+      .orient('left').ticks(4)
+    var yAxisG = pg.append("g")
+      .attr("class", "y axis")
+      .attr("transform", "translate(0,0)")
+      .call(yAxis)
+
+    var curve_data
+    if(is_supply) curve_data = [
+        {x: x.domain()[0], y: y.domain()[0]}
+      , {x: x.domain()[1], y: y.domain()[1]}
+    ]; else curve_data = [
+        {x: x.domain()[0], y: y.domain()[1]}
+      , {x: x.domain()[1], y: y.domain()[0]}
+    ]
+
+    var curve = pg.append('path')
+      .datum(curve_data)
+      .attr('d', line)
+      .attr('class', 'curve ' + (is_supply ? 'supply' : 'demand'))
+
+    var quantity_label = pg.append('text').text('quantity')
+      .attr('class', 'quantity label')
+      .attr('x', width)
+      .attr('y', height + 30)
+
+    var price_label = pg.append('text').text('price')
+      .attr('class', 'price label')
+      .attr('x', 0)
+      .attr('y', -33)
+      .attr('transform', 'rotate(-90)')
+
+    scope.$watch('quantity', function(quantity){
+      x.domain(quantity.slice().map(Number))
+      xAxisG.call(xAxis)
+    }, true)
+
+    scope.$watch('price', function(price){
+      y.domain(price.slice().map(Number))
+      yAxisG.call(yAxis)
+    })
+
+    // var drag = d3.behavior.drag()
+    // .on("drag", function(){
+    //   var mx = d3.event.x
+    //   if(mx < x.range()[0] ) mx = x.range()[0]
+    //   else if(mx > x.range()[1]) mx = x.range()[1]
+    //   scope.$apply(function(){
+    //     scope.quantity = x.invert(mx)
+    //   })
+    // })
+
+    // scope.$watch('quantity', function(quantity){
+    //   // console.log(quantity)
+    //   quantity_nob.attr('transform', 'translate(' + x(quantity) + ',0)')
+    // })
+
+    // var quantity_nob_rail = pg.append('g')
+    //   .attr('transform', 'translate(0, ' + height + ')')
+
+    // var quantity_nob = quantity_nob_rail.append('g').attr('class', 'quantity nob')
+    //   .attr('transform', 'translate(' + width / 2 + ',0)')
+    //   .call(drag)
+    
+    // quantity_nob.append('circle').attr('r', 5)
+
+    // var quantity_dash = pg.append('path')
+    //   .attr('class', 'dash')
+    //   .datum([{x: scope.quantity, y: y.domain()[0]}, {x: 0, y: 0 }])
+      // .attr('d', line)
+
+    // function quantity(price){
+    //   return price * scope.elasticity + scope.shift
+    // }
+    // function price(quantity){
+    //   return (quantity - scope.shift) / scope.elasticity
+    // }
+
+  }
+
+  return {
+    link: link
+    , restrict: 'E'
+    , scope: { quantity: '=', price: '=' }
+  }
+})
+
+    </script>
+  </body>
+</html>
