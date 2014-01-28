@@ -6,6 +6,14 @@ todo
 
 notes
 + demand for drugs is "price inelastic"
++ most people (all?) agree drugs are bad
++ making them illegal makes it even worse (more money in the hands of drug dealers)
++ increases the economic incentive to deal drugs
++ incarceration rates
++ externalities
+  - external coasts are so much higher than just the deals themselves
+  - drug deals in bad neighborhoods lower the value of the houses in those neighborhoods
+  - exacerbated by their illegality
 
 Papers
 http://faculty.winthrop.edu/stonebrakerr/book/supplysidedrugs.htm
@@ -31,3 +39,19 @@ http://nbviewer.ipython.org/url/norvig.com/ipython/Economics.ipynb?utm_source=ha
 
 After 40-Year Fight, Illicit Drug Use at All-Time High
 http://www.huffingtonpost.com/annabelle-buggle/after-40year-fight-illici_b_3623714.html
+
+
+DrugFacts: Nationwide Trends
+http://www.drugabuse.gov/publications/drugfacts/nationwide-trends
+
+Drug Spending
+http://www.drugwarfacts.org/cms/Economics#sthash.cL0OG51F.dpbs
+http://www.countthecosts.org/seven-costs/wasting-billions-drug-law-enforcement
+
+
+Results from the 2010 National Survey on Drug Use and Health: Summary of National Findings
+http://www.oas.samhsa.gov/NSDUH/2k10NSDUH/2k10Results.htm
+
+What America's Users Spend on Illegal Drugs
+http://www.whitehouse.gov/sites/default/files/page/files/wausid_report_final_1.pdf
++ In 2003, a chronic user of cocaine spent $1,005 per month, on average, on his cocaine use. Chronic users of other drugs spent $1,054 per month for heroin and $1,022 per month for methamphetamine. 

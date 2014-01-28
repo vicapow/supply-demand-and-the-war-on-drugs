@@ -14,8 +14,8 @@ html, body{
 sd-graph, sd-combined{
 /*  width: 100%;
   height: 100%;*/
-  width: 300px;
-  height: 300px;
+  width: 100%;
+  height: 250px;
   display: block;
   overflow: hidden;
   /*border: 10px solid red;*/
@@ -27,8 +27,23 @@ path{
   stroke-width: 1;
 }
 
+.money{
+  fill: red;
+  opacity: 0.1;
+}
+
+.money.shifted{
+  fill: blue;
+  opacity: 0.1;
+}
+
 sd-graph, sd-combined{
-  shape-rendering: crispEdges;
+  /*shape-rendering: crispEdges;*/
+}
+
+sd-combined .intersection{
+  fill: #ddd;
+  stroke: #888;
 }
 
 .quantity.label{
@@ -39,17 +54,19 @@ sd-graph, sd-combined{
   text-anchor: end;
 }
 
-sd-graph path.curve{
+sd-graph path.curve, sd-combined path.curve{
   stroke-width: 4;
 }
 
+path.curve.supply.not-shifted{
+  stroke: rgba(0, 0, 0, 0.2);
+}
+
 path.curve.supply{
-  stroke-width: 4;
   stroke: orange;
 }
 
 path.curve.demand{
-  stroke-width: 4;
   stroke: blue;
 }
 
@@ -73,58 +90,154 @@ input[type="range"]{
 }
 
 .column{
-  width: 400px;
+  width: 100%;
   float: left;
-  padding: 10px;
 }
 
+.column .left, .column .right{
+  width: 270px;
+  float: left;
+  padding: 20px;
+}
+
+.column .full{
+  width: 600px;
+  padding: 20px;
+}
+
+body{
+  width: 640px;
+  margin: auto;
+}
     </style>
   </head>
   <body ng-app="myApp" ng-controller="MainCtrl">
     <div class="column">
-      <h1>Demand Curve</h1>
-      <sd-graph class="demand" quantity="demand.quantity" price="price">
-      </sd-graph>
-      <input type="range"
-        class="quantity"
-        min="{{sliderRange[0]}}"
-        max="{{sliderRange[1]}}"
-        ng-model="demand.quantity[1]"
-        step="{{(max - min) / 1000}}">
-      <br>
-      for each $1 decrease in the unit price of the drugs, drug users would be willing to consume {{demandSlope | number:2}} more units of drugs
+      <div class="full">
+        <h2>The fallacy of a supply side drug policy</h2>
+        <p>By Victor Powell</p>
+        <p>
+          Drugs, and the illicit activities that follow them are a huge problem in the United States and other countries. In the US, one of the Drug Enforcement Administration (or DEA's) stated objectives is to "reduce the availability of illicit abuse-type drugs." However, the economic theory of supply and demand along with some key characters of addiction would suggest that even if interdiction efforts are effective, they would actually cause an increase in the total revenue to drug sellers.
+        </p>
+        <p>
+          To illustrate this point, let's first make sure to understand the concept of demand and supply in a more formal sense. In any market, including the drug market, the price of a good is determined by two factors; the supply of that good, and consumers demand (or want) for that good.
+        </p>
+        <h3> Supply </h3>
+        <p>
+          A supply curve represents the amount suppliers would be willing to supply if that good were a particular price. For example, using the drug analogy, if the price of a drug doubled there would be more people willing to take the risk to sell it at the new price than at the old. Think of the supply curve as asking "if the price of the good increased by $1, how many more units of the drug would the suppliers be willing to supply?"
+        </p>
+        <sd-graph class="supply" quantity="supply.quantity" price="price"></sd-graph>
+        <input-range
+          min="sliderRange[0]"
+          max="sliderRange[1]"
+          ng-model="supply.quantity[1]"
+          step="{{(sliderRange[1] - sliderRange[0]) / 1000}}">
+        </input-range>
+        <div style="float:left">less elastic</div>
+        <div style="float:right">more elastic</div>
+        <div style="clear:both"></div>
+        <p>
+          <i>For each $1 increase in the unit price of the drug, suppliers would be willing to supply {{supplySlope | number:2}} more units of drugs.</i>
+        </p>
+        <h3>Demand Curve</h3>
+        <p>
+          The demand curve is very similar to the supply curve. It represents the amount of the good consumers would be willing to consume if the good were a particular value. Think of the demand curve as asking "if the price of the good increased by $1, how many fewer units of the drug would the consumers be willing to consume?"
+        </p>
+        <sd-graph class="demand" quantity="demand.quantity" price="price"></sd-graph>
+        <input-range 
+          ng-model="demand.quantity[1]"
+          class="quantity"
+          min="sliderRange[0]"
+          max="sliderRange[1]"
+          step="(sliderRange[1] - sliderRange[0]) / 1000" >
+        </input-range>
+        <p>
+          <i>for each $1 increase in the unit price of drugs, drug users would consume {{demandSlope | number:2}} less drugs.</i>
+        </p>
+        <h3>Elasticity</h3>
+        <p>
+          If the demand for the good in question is inelastic, that is, the demand for the good would remain relatively the same if the price increases or decreased, restricting the supply of that good can actually cause an up tick in total revenue from its sale. Most demands for goods are relatively elastic. For example, think of gummy bears. If the price of gummy bears doubled tomorrow, most people would be unaffected. Its fairly easy to stop eating gummy bears. However, demand for most drugs are very inelastic, particularly for drugs that are extremely addictive like heroin. If the price of heroin doubled for a heroin addict, they're much more likely find some way to pay for their addiction, by theft or other means. than subject themselves to withdrawal.
+        </p>
+      </div>
     </div>
     <div class="column">
-      <h1>Supply Curve</h1>
-      <sd-graph class="supply" quantity="supply.quantity" price="price">
-      </sd-graph>
-      <input type="range" 
-        min="{{sliderRange[0]}}"
-        max="{{sliderRange[1]}}"
-        ng-model="supply.quantity[1]"
-        step="{{(max - min) / 1000}}">
-      <p>
-        for each $1 increase in the unit price of the drug, suppliers would be willing to supply {{supplySlope | number:2}} more units of drugs
-      </p>
-      <input type="range" 
-        min="{{supplyShift.range[0]}}"
-        max="{{supplyShift.range[1]}}"
-        ng-model="supplyShift.value"
-        step="{{(supplyShift.range[1] - supplyShift.range[0]) / 1000}}">
-      <p>
-        how much the supply of drugs is being restricted
-      </p>
+      <div class="left">
+        <sd-combined class="demand" 
+          quantity="quantity" 
+          price="price" 
+          supply-curve="supplyCurve" 
+          demand-curve="demandCurve"
+          total-money="totalMoney"
+          total-money-shifted="totalMoneyShifted"
+          supply-curve-shift="supplyShift.value">
+        </sd-combined>
+      </div>
+      <div class="right">
+        <p>
+          how much the supply of drugs is being restricted
+        </p>
+        <input type="range" 
+          min="{{supplyShift.range[0]}}"
+          max="{{supplyShift.range[1]}}"
+          ng-model="supplyShift.value"
+          step="{{(supplyShift.range[1] - supplyShift.range[0]) / 1000}}">
+        <div>
+          <span style="float:left">less restricted</span>
+          <span style="float:right">more restricted</span>
+        </div>
+        <br>
+        <p>
+          total money before supply restriction: ${{totalMoney | number:2 }}
+        </p>
+        <p>
+          total money after supply restriction: ${{totalMoneyShifted | number:2 }}
+        </p>
+        <p>
+          difference: ${{totalMoneyShifted - totalMoney | number:2 }}
+        </p>
+        <p>
+          percentage change: {{ (((totalMoneyShifted / totalMoney | number:2) * 100 - 100) | number:2) + '%' }}
+        </p>
+      </div>
     </div>
     <div class="column">
-      <h1>Demand & Supply</h1>
-      <sd-combined class="demand" 
-        quantity="quantity" 
-        price="price" 
-        supply-curve="supplyCurve" 
-        demand-curve="demandCurve"
-        supply-curve-shifted="supplyCurveShifted">
-      </sd-combined>
-    </div>
+    <div class="full">
+        <p>
+          This up tick in revenue wouldn't necessarily translate to more net profits for the drug sellers. A lot that added revenue would now be needed to pay for protection against increased interdiction efforts which translates to more gun shootouts and related violent activities.
+        </p>
+        <p>
+          Ether the DEA has been effective in reducing the supply of drugs, thus causing an up tick in revenue to drug sellers leading to even more violence or, more likely, they have not been effective at reducing the supply of drugs at the expense of tax payers. <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1446802/figure/f1/">Economic data</a> suggests the later, as the price of heroin and cocaine has been steadily decreasing over the last 30 years while emergency department mentions for both have been steadily on the rise. This would suggest that drug suppliers have simply been getting better at finding <a href="http://motherboard.vice.com/blog/drugsub">new ways</a> to circumvent interdiction efforts.
+        </p>
+        <p>
+          Links to additional resources:
+          <ul>
+            <li>
+              <a href="http://www.youtube.com/watch?v=ZR2255CEhvk">
+                Economics 1 - Lecture 2: Demand and Supply
+              </a>
+            </li>
+            <li>
+              <a href="http://www.businessinsider.com/econ-101-hayek-and-why-we-are-losing-the-war-against-drugs-2011-3">
+                Why we are losing the war against drugs
+              </a>
+            </li>
+            <li>
+              <a href="http://faculty.winthrop.edu/stonebrakerr/book/supplysidedrugs.htm">
+                Supply-Side Drug Policy: Will It Ever Work?
+              </a>
+            </li>
+            <li>
+              <a href="http://www.econlib.org/library/Columns/y2013/Powelldrugs.html">
+                The economics Behind the U.S. Government's Unwinnable War on Drugs
+              </a>
+            </li>
+            <li>
+              <a href="http://www.economist.com/node/18772646">
+                The argument over treatment is being won. Now for the battle over supply
+            </li>
+          </ul>
+        </p>
+      </div>
     </div>
     <script src="d3.js"></script>
     <script src="angular.js"></script>
@@ -134,15 +247,32 @@ input[type="range"]{
 
 var app = angular.module('myApp', [])
 
-app.controller('MainCtrl', function($scope){
-  var sliderRange = $scope.sliderRange = [0, 1e3]
+// this is all just a somewhat elaborate hack to get the slider nob to start
+// in the middle of the slider
+app.directive('inputRange', function(){
+  function link(scope, el, attr){
+    scope.$watch('ngModel', function(val){ el.find('input')[0].value = val })
+  }
+  return {
+    link: link
+    , restrict: 'E'
+    , scope: { ngModel: '=', min: '=', max: '=' }
+    , template: '<input type="range" ng-model="ngModel" min="{{min}}" max="{{max}}"></input>'
+  }
+})
+
+app.controller('MainCtrl', function($scope, $window){
+  var sliderRange = $scope.sliderRange = [0, 1e8]
   var middle = (sliderRange[1] - sliderRange[0]) / 2 + sliderRange[0]
   var supply = $scope.supply = { quantity: [0, middle] }
-  var demand = $scope.demand = { quantity: [0, middle] }
+  var demand = $scope.demand = { quantity: [0, 2e7] }
   var price = $scope.price = [0, 200]
   var combined = $scope.combined = {}
 
   var quantity = $scope.quantity = [0, 0]
+
+  $scope.totalMoney = 0
+  $scope.totalMoneyShifted = 0
   
   // start
   $scope.$watch(function(){
@@ -165,11 +295,6 @@ app.controller('MainCtrl', function($scope){
     $scope.supplySlope = (p2 - p1) / (price[1] - price[0])
   }, true)
 
-  var supplyCurveShifted = $scope.supplyCurveShifted = [
-      { quantity: supply.quantity[0], price: $scope.price[0] }
-    , { quantity: supply.quantity[1], price: $scope.price[1] }
-  ]
-
   var demandCurve = $scope.demandCurve = [
       { quantity: demand.quantity[0], price: $scope.price[1] }
     , { quantity: demand.quantity[1], price: $scope.price[0] }
@@ -180,7 +305,9 @@ app.controller('MainCtrl', function($scope){
     $scope.demandSlope = (p2 - p1) / (price[1] - price[0])
   }, true)
 
-  $scope.supplyShift = { value: 50, range: [ 0, 100] }
+  $scope.supplyShift = { value: 0, range: [ -1e7, 1e7] }
+
+  angular.element($window).on('resize', $scope.$apply.bind($scope))
 
 })
 
@@ -192,6 +319,7 @@ app.directive('sdCombined', function(){
     var padding = { top: p, right: p, bottom: p + 15, left: p + 20 }
     var width = el.clientWidth - padding.left - padding.right
     var height = el.clientHeight - padding.top - padding.bottom
+    var supplyCurveShifted = [{quantity:0,price:0}, {quantity:0,price:0}]
     var svg = d3.select(el).append('svg')
       .attr({width: el.clientWidth, height: el.clientHeight})
     var pg = svg.append('g')
@@ -204,7 +332,7 @@ app.directive('sdCombined', function(){
       .x(function(d){ return x(d.quantity) })
       .y(function(d){ return y(d.price) })
 
-    var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(true)
+    var xAxis = d3.svg.axis().scale(x).tickSubdivide(true)
       .ticks(4).tickFormat(d3.format(',.2s'))
     // add the x-axis
     var xAxisG = pg.append("g")
@@ -222,10 +350,10 @@ app.directive('sdCombined', function(){
     var supply_curve = pg.append('path')
       .datum(scope.supplyCurve)
       .attr('d', line)
-      .attr('class', 'curve supply')
+      .attr('class', 'curve supply not-shifted')
 
     var supply_curve_shifted = pg.append('path')
-      .datum(scope.supplyCurveShifted)
+      .datum(supplyCurveShifted)
       .attr('d', line)
       .attr('class', 'curve supply')
 
@@ -234,39 +362,154 @@ app.directive('sdCombined', function(){
       .attr('d', line)
       .attr('class', 'curve demand')
 
-    console.log('demand_curve', demand_curve)
+
+    var original_money = pg.append('rect')
+      .attr('class', 'money')
+
+    var shifted_money = pg.append('rect')
+      .attr('class', 'money shifted')
+
+
+    var original_intersect = pg.append('circle')
+      .attr('class', 'intersection').attr('r', 3)
+    var shifted_intersect = pg.append('circle')
+      .attr('class', 'intersection').attr('r', 3)
 
     var quantity_label = pg.append('text').text('quantity')
       .attr('class', 'quantity label')
-      .attr('x', width)
-      .attr('y', height + 30)
 
     var price_label = pg.append('text').text('price')
       .attr('class', 'price label')
-      .attr('x', 0)
-      .attr('y', -33)
       .attr('transform', 'rotate(-90)')
 
-    scope.$watch('demandCurve', update_curve.bind(null, demand_curve), true)
-    scope.$watch('supplyCurve', update_curve.bind(null, supply_curve), true)
-    scope.$watch('supplyCurveShifted', update_curve.bind(null, supply_curve_shifted), true)
+    function update_labels(){
+      quantity_label.attr('x', width).attr('y', height + 30)
+      price_label.attr('x', 0).attr('y', -33)
+    }
 
+    scope.$watch('demandCurve', update_curves, true)
+    scope.$watch('supplyCurveShift', update_curves)
+    scope.$watch('supplyCurve', update_curves, true)
+
+    scope.$watch(function(){
+      return el.clientWidth * el.clientHeight
+    }, function(){
+      width = el.clientWidth - padding.left - padding.right
+      height = el.clientHeight - padding.top - padding.bottom
+      svg.attr({width: el.clientWidth, height: el.clientHeight})
+      x.range([0, width])
+      y.range([height, 0])
+      update_axis()
+      update_labels()
+      update_curves()
+    })
+
+    function update_supply_curve_shifted(){
+      var p1 = supplyCurveShifted[0], p2 = supplyCurveShifted[1]
+      p1.quantity = scope.supplyCurve[0].quantity - scope.supplyCurveShift
+      p1.price = scope.supplyCurve[0].price
+      p2.quantity = scope.supplyCurve[1].quantity - scope.supplyCurveShift
+      p2.price = scope.supplyCurve[1].price
+      update_curve(supply_curve_shifted, supplyCurveShifted)
+      update_curve(supply_curve, scope.supplyCurve)
+    }
     function update_curve(path, data){ path.attr('d', line(data)) }
     function update_curves(){
       update_curve(supply_curve, scope.supplyCurve)
       update_curve(demand_curve, scope.demandCurve)
-      update_curve(supply_curve_shifted, scope.supplyCurveShifted)
+      update_supply_curve_shifted()
+      update_intersections()
+      update_money_rects()
+      update_money()
     }
 
-    scope.$watch('quantity', function(quantity){
-      x.domain(quantity.slice().map(Number))
+    function update_axis(){
+      xAxisG.call(xAxis.tickSize(-height))
+      yAxisG.call(yAxis.tickSize(-width))
+    }
+
+    function cross(v, w){ return (v.x * w.y) - (v.y * w.x) }
+    function minus(v, w){ return { x: w.x - v.x, y: w.y - v.y } }
+    function add(v, w){ return { x: v.x + w.x, y: v.y + w.y } }
+    function scale(v, s){ return { x: v.x * s, y: v.y * s } }
+    function line_segment_intersect(a1, a2, b1, b2){
+      var s = { x: a2.x - a1.x, y: a2.y - a1.y }
+      var r = { x: b2.x - b1.x, y: b2.y - b1.y }
+      var p = a1
+      var q = b1
+      var t = cross(minus(q, p), s) / cross(r, s)
+      var u = cross(minus(q, p), r) / cross(r, s)
+      return add(q, scale(r, t))
+    }
+
+    function original_intersection(){
+      var a1 = {x: scope.supplyCurve[0].quantity, y: scope.supplyCurve[0].price}
+      var a2 = {x: scope.supplyCurve[1].quantity, y: scope.supplyCurve[1].price}
+      var b1 = {x: scope.demandCurve[0].quantity, y: scope.demandCurve[0].price}
+      var b2 = {x: scope.demandCurve[1].quantity, y: scope.demandCurve[1].price}
+      return line_segment_intersect(a1, a2, b1, b2)
+    }
+
+    function shifted_intersection(){
+      var a1 = {x: supplyCurveShifted[0].quantity, y: supplyCurveShifted[0].price}
+      var a2 = {x: supplyCurveShifted[1].quantity, y: supplyCurveShifted[1].price}
+      var b1 = {x: scope.demandCurve[0].quantity, y: scope.demandCurve[0].price}
+      var b2 = {x: scope.demandCurve[1].quantity, y: scope.demandCurve[1].price}
+      return line_segment_intersect(a1, a2, b1, b2)
+    }
+
+    var original_intersection_point
+    var shifted_intersection_point
+    function update_intersections(){
+      var p = original_intersection_point = original_intersection()
+      original_intersect.attr({cx: x(p.x), cy: y(p.y) })
+      p = shifted_intersection_point = shifted_intersection()
+      shifted_intersect.attr({cx: x(p.x), cy: y(p.y) })
+    }
+
+    function update_money_rects(){
+      var rect = {
+          x: x(0)
+        , y: y(original_intersection_point.y)
+        , width: x(original_intersection_point.x) - x(0)
+        , height: y(0) - y(original_intersection_point.y)
+      }
+      original_money.attr(rect)
+
+      var rect = {
+          x: x(0)
+        , y: y(shifted_intersection_point.y)
+        , width: x(shifted_intersection_point.x) - x(0)
+        , height: y(0) - y(shifted_intersection_point.y)
+      }
+      shifted_money.attr(rect)
+    }
+
+    function update_money(){
+      scope.totalMoney = original_intersection_point.x * original_intersection_point.y
+      scope.totalMoneyShifted = shifted_intersection_point.x * shifted_intersection_point.y
+    }
+
+    function extent_all(attr){
+      return d3.extent(
+        scope.supplyCurve
+        .concat(supplyCurveShifted)
+        .concat(scope.demandCurve)
+      , function(d){ return Number(d[attr]) })
+    }
+
+    scope.$watch(function(){
+      return extent_all('quantity')
+    }, function(extent){
+      x.domain(extent)
       xAxisG.call(xAxis)
       update_curves()
     }, true)
 
-    // although the price 
-    scope.$watch('price', function(price){
-      y.domain(price.slice().map(Number))
+    scope.$watch(function(){
+      return extent_all('price')
+    }, function(price){
+      y.domain(extent_all('price'))
       yAxisG.call(yAxis)
       update_curves()
     }, true)
@@ -279,7 +522,9 @@ app.directive('sdCombined', function(){
       , quantity: '='
       , supplyCurve: '='
       , demandCurve: '='
-      , supplyCurveShifted: '='
+      , supplyCurveShift: '='
+      , totalMoney: '='
+      , totalMoneyShifted: '='
     }
     , restrict: 'E'
   }
@@ -290,6 +535,7 @@ app.directive('sdGraph', function(){
   function link(scope, el, attr){
     el = el[0]
     var p = 25
+    var ticks = 4
     var is_supply = attr.class.indexOf('supply') !== -1
     var padding = { top: p, right: p, bottom: p + 15, left: p + 20 }
     var width = el.clientWidth - padding.left - padding.right
@@ -304,45 +550,51 @@ app.directive('sdGraph', function(){
       .x(function(d){ return x(d.x) })
       .y(function(d){ return y(d.y) })
 
-    var xAxis = d3.svg.axis().scale(x).tickSize(-height)
-      .tickSubdivide(true).ticks(4).tickFormat(d3.format(',.2s'))
+    var xAxis = d3.svg.axis().scale(x).tickSubdivide(true).ticks(ticks)
+      .tickFormat(d3.format(',.2s'))
     // add the x-axis
     var xAxisG = pg.append("g")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + height + ")")
       .call(xAxis)
 
-    var yAxis = d3.svg.axis().scale(y).tickSize(-width).tickSubdivide(true)
-      .orient('left').ticks(4)
+    var yAxis = d3.svg.axis().scale(y).tickSubdivide(true)
+      .orient('left').ticks(ticks)
     var yAxisG = pg.append("g")
       .attr("class", "y axis")
       .attr("transform", "translate(0,0)")
       .call(yAxis)
 
-    var curve_data
-    if(is_supply) curve_data = [
-        {x: x.domain()[0], y: y.domain()[0]}
-      , {x: x.domain()[1], y: y.domain()[1]}
-    ]; else curve_data = [
-        {x: x.domain()[0], y: y.domain()[1]}
-      , {x: x.domain()[1], y: y.domain()[0]}
-    ]
+    function update_axis(){
+      xAxisG.call(xAxis.tickSize(-height))
+      yAxisG.call(yAxis.tickSize(-width))
+    }
+
+    
+    function curve_data(){
+        if(is_supply) return [
+          {x: x.domain()[0], y: y.domain()[0]}
+        , {x: x.domain()[1], y: y.domain()[1]}
+      ]; else return [
+          {x: x.domain()[0], y: y.domain()[1]}
+        , {x: x.domain()[1], y: y.domain()[0]}
+      ]
+    }
 
     var curve = pg.append('path')
-      .datum(curve_data)
-      .attr('d', line)
       .attr('class', 'curve ' + (is_supply ? 'supply' : 'demand'))
 
     var quantity_label = pg.append('text').text('quantity')
       .attr('class', 'quantity label')
-      .attr('x', width)
-      .attr('y', height + 30)
 
     var price_label = pg.append('text').text('price')
       .attr('class', 'price label')
-      .attr('x', 0)
-      .attr('y', -33)
       .attr('transform', 'rotate(-90)')
+
+    function update_labels(){
+      quantity_label.attr('x', width).attr('y', height + 30)
+      price_label.attr('x', 0).attr('y', -33)
+    }
 
     scope.$watch('quantity', function(quantity){
       x.domain(quantity.slice().map(Number))
@@ -352,6 +604,19 @@ app.directive('sdGraph', function(){
     scope.$watch('price', function(price){
       y.domain(price.slice().map(Number))
       yAxisG.call(yAxis)
+    })
+
+    scope.$watch(function(){
+      return el.clientWidth * el.clientHeight
+    }, function(){
+      width = el.clientWidth - padding.left - padding.right
+      height = el.clientHeight - padding.top - padding.bottom
+      svg.attr({width: el.clientWidth, height: el.clientHeight})
+      x.range([0, width])
+      y.range([height, 0])
+      update_axis()
+      update_labels()
+      curve.datum(curve_data()).attr('d', line)
     })
 
     // var drag = d3.behavior.drag()
